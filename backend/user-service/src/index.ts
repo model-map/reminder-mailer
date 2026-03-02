@@ -1,6 +1,8 @@
 import express, { NextFunction, Request, Response } from "express";
 import path from "path";
 import dotenv from "dotenv";
+import morganMiddleware from "./middleware/morganMiddleware.js";
+import logger from "./utils/logger.js";
 dotenv.config();
 
 const app = express();
@@ -12,9 +14,12 @@ app.use(express.static(path.resolve(process.cwd(), "dist/public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Global middleware for logging HTTP requests via morgan
+app.use(morganMiddleware);
+
 app.get("/", (req, res) =>
   res.json({
-    message: `${process.env.SERVICE || ""} user-service running`,
+    message: `${process.env.SERVICE || "unknown-service"} running`,
   }),
 );
 
@@ -25,12 +30,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Global error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.log(`Internal server error: ${err}`);
+  logger.error(`Internal server error: ${err}`);
   res.status(500).json({ message: "Internal server error" });
 });
 
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  logger.info(`Server running on http://localhost:${PORT}`);
 });
