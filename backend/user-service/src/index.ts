@@ -6,6 +6,7 @@ import logger from "./utils/logger.js";
 import connectDb from "./config/db.js";
 import { createClient } from "redis";
 import TryCatch from "./utils/TryCatch.js";
+import userRouter from "./routes/user.js";
 dotenv.config();
 
 const app = express();
@@ -68,6 +69,9 @@ app.get(
     });
   }),
 );
+
+// Routes
+app.use("/api/v1/user", userRouter);
 
 // 404 Handler
 app.use((req: Request, res: Response, next: NextFunction) => {
