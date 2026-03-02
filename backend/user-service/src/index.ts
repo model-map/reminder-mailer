@@ -3,6 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import morganMiddleware from "./middleware/morganMiddleware.js";
 import logger from "./utils/logger.js";
+import connectDb from "./config/db.js";
 dotenv.config();
 
 const app = express();
@@ -16,6 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Global middleware for logging HTTP requests via morgan
 app.use(morganMiddleware);
+
+// Connect to database
+connectDb();
 
 app.get("/", (req, res) =>
   res.json({
