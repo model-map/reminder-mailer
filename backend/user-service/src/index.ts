@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import morganMiddleware from "./middleware/morganMiddleware.js";
 import logger from "./utils/logger.js";
 import connectDb from "./config/db.js";
+import { createClient } from "redis";
+import TryCatch from "./utils/TryCatch.js";
 dotenv.config();
 
 const app = express();
@@ -21,9 +23,49 @@ app.use(morganMiddleware);
 // Connect to database
 connectDb();
 
-app.get("/", (req, res) =>
-  res.json({
-    message: `${process.env.SERVICE || "unknown-service"} running`,
+// Create a Redis client
+const redisClient = createClient({
+  username: process.env.REDIS_USERNAME,
+  password: process.env.REDIS_PASSWORD,
+  socket: {
+    keepAlive: true,
+    host: process.env.REDIS_URL,
+    port: parseInt(process.env.REDIS_PORT!),
+    reconnectStrategy(retries, cause) {
+      if (retries > 10) return new Error("Retry limit reached.");
+      return Math.min(retries * 100, 3000);
+    },
+  },
+});
+
+redisClient.on("error", (err: any) => {
+  console.log("Redis Client Error", err);
+  logger.error(err);
+});
+await redisClient.connect().then(() => logger.info(`Connected to Redis.`));
+
+// '/' endpoint
+
+const project = process.env.PROJECT || "unknown-project";
+const service = process.env.SERVICE || "unknown-service";
+app.get(
+  "/",
+  TryCatch(async (req, res) => {
+    // Current server start time
+    const time =
+      (await redisClient.get(`${project}-${service}-service-startTime`)) ||
+      new Date(Date.now()).toISOString();
+
+    const uptime = Math.floor((Date.now() - Date.parse(time)) / 1000);
+    // response
+    res.status(200).json({
+      message: {
+        application: `${project}`,
+        "micro-service": `${service}-service`,
+      },
+      started: `${time}`,
+      uptime: `${uptime} seconds`, //uptime in seconds
+    });
   }),
 );
 
@@ -38,8 +80,15 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: "Internal server error" });
 });
 
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  logger.info(`Server running on http://localhost:${PORT}`);
+const PORT = Number(process.env.PORT) || 4000;
+app.listen(PORT, (err) => {
+  if (err) {
+    logger.error("Failed to start server:", err);
+    return;
+  }
+  redisClient.set(
+    `${project}-${service}-service-startTime`,
+    new Date(Date.now()).toISOString(),
+  );
+  logger.info(`Server is running on: http://localhost:${PORT}`);
 });
