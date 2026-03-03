@@ -2,17 +2,14 @@ import { NextFunction, Request, Response } from "express";
 import TryCatch from "../utils/TryCatch.js";
 import { IUser, User } from "../model/User.js";
 import { ApiError } from "../types/api-error.js";
-import jwt, {
-  JsonWebTokenError,
-  JwtPayload,
-  TokenExpiredError,
-} from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
+const { JsonWebTokenError, TokenExpiredError } = jwt;
 import dotenv from "dotenv";
 import logger from "../utils/logger.js";
 dotenv.config();
 
 export interface AuthenticatedRequest extends Request {
-  user?: IUser;
+  user?: Omit<IUser, "password">;
 }
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -51,8 +48,13 @@ const isAuth = async (
       };
       return res.status(401).json(err);
     }
+    const {
+      password: _password,
+      __v,
+      ...userWithoutPassword
+    } = user.toObject();
 
-    req.user = user;
+    req.user = userWithoutPassword;
     logger.info(`isAuth - user authenticated`);
     next();
   } catch (error) {

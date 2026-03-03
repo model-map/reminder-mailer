@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, HydratedDocument } from "mongoose";
 
-export interface IUser extends Document {
+export interface IUser {
   username: string;
   email: string;
   password: string;
@@ -9,7 +9,9 @@ export interface IUser extends Document {
   updatedAt?: Date;
 }
 
-const userSchema = new Schema<IUser>(
+export type IUserDocument = HydratedDocument<IUser>;
+
+const userSchema = new Schema<IUserDocument>(
   {
     username: {
       type: String,
@@ -35,4 +37,4 @@ const userSchema = new Schema<IUser>(
   },
 );
 
-export const User = mongoose.model<IUser>("users", userSchema);
+export const User = mongoose.model<IUserDocument>("users", userSchema);

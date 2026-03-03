@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import validator from "validator";
 import { ApiError } from "../types/api-error.js";
-import { IUser, User } from "../model/User.js";
+import { IUser, IUserDocument, User } from "../model/User.js";
 import generateToken from "../utils/generateToken.js";
 import { comparePassword, hashPassword } from "../utils/passwordUtils.js";
 import TryCatch from "../utils/TryCatch.js";
+import { AuthenticatedRequest } from "../middleware/isAuth.js";
 
 // -----------------------------------------------------------
 // CONTROLLER FOR USER SIGN UP
@@ -127,7 +128,7 @@ export const login = TryCatch(async (req: Request, res: Response) => {
   }
 
   const isEmail = validator.isEmail(loginIdentifier);
-  let user: IUser | null;
+  let user: IUserDocument | null;
   if (isEmail) {
     user = await User.findOne({ email: loginIdentifier });
   } else {
@@ -163,3 +164,21 @@ export const login = TryCatch(async (req: Request, res: Response) => {
     token,
   });
 });
+
+// -----------------------------------------------------------
+// CONTROLLER TO FETCH USER
+export const getUser = TryCatch(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const user = req.user;
+    // If no user
+    if (!user) {
+      const err: ApiError = {
+        error: "unauthenticated",
+        message: `Authentication failed. Please login`,
+      };
+      return res.status(400).json(err);
+    }
+
+    return res.json({ user });
+  },
+);
