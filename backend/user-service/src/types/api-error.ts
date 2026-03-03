@@ -3,7 +3,8 @@ type ApiErrorCode =
   | "credentials_required"
   | "password_required"
   | "unauthorized"
-  | "forbidden";
+  | "unauthenticated"
+  | "internal_server_error";
 
 export interface ApiError {
   error: ApiErrorCode;

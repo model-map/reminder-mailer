@@ -98,7 +98,7 @@ export const signUp = TryCatch(async (req: Request, res: Response) => {
   const user = await User.create({ username, email, password: hashedPassword });
 
   // Generate token
-  const token = generateToken(user);
+  const token = generateToken(user._id.toString());
 
   //   Remove unnecessary info from user
   const { password: _password, __v, ...userWithoutPassword } = user.toObject();
@@ -154,7 +154,7 @@ export const login = TryCatch(async (req: Request, res: Response) => {
   }
 
   // Generate token
-  const token = generateToken(user);
+  const token = generateToken(user._id.toString());
   const { password: _password, __v, ...userWithoutPassword } = user.toObject();
 
   res.json({
