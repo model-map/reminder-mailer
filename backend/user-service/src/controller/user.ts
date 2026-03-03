@@ -3,9 +3,12 @@ import validator from "validator";
 import { ApiError } from "../types/api-error.js";
 import { IUser, User } from "../model/User.js";
 import generateToken from "../utils/generateToken.js";
-import { hashPassword } from "../utils/passwordUtils.js";
+import { comparePassword, hashPassword } from "../utils/passwordUtils.js";
+import TryCatch from "../utils/TryCatch.js";
 
-export const signUp = async (req: Request, res: Response) => {
+// -----------------------------------------------------------
+// CONTROLLER FOR USER SIGN UP
+export const signUp = TryCatch(async (req: Request, res: Response) => {
   let username: string = req.body?.username?.trim()?.toLowerCase() || "";
   const email: string = req.body?.email?.trim()?.toLowerCase() || "";
   const password: string = req.body?.password?.trim() || "";
@@ -105,4 +108,58 @@ export const signUp = async (req: Request, res: Response) => {
     user: userWithoutPassword,
     token,
   });
-};
+});
+
+// -----------------------------------------------------------
+// CONTROLLER FOR USER VERIFICATION
+export const login = TryCatch(async (req: Request, res: Response) => {
+  const loginIdentifier =
+    req.body?.loginIdentifier?.trim()?.toLowerCase() || "";
+  const password = req.body?.password?.trim() || "";
+
+  // if no username or email is provided
+  if (!loginIdentifier || !password) {
+    const err: ApiError = {
+      error: "credentials_required",
+      message: `Username or Email and Password required`,
+    };
+    return res.status(401).json(err);
+  }
+
+  const isEmail = validator.isEmail(loginIdentifier);
+  let user: IUser | null;
+  if (isEmail) {
+    user = await User.findOne({ email: loginIdentifier });
+  } else {
+    user = await User.findOne({ username: loginIdentifier });
+  }
+
+  //   if user does not exist in DB
+  if (!user) {
+    const err: ApiError = {
+      error: "invalid_credentials",
+      message: "User does not exist. Please create an account",
+    };
+    return res.status(401).json(err);
+  }
+
+  // Comparing hashed password
+  const isMatch = await comparePassword(password, user.password);
+  if (!isMatch) {
+    const err: ApiError = {
+      error: "invalid_credentials",
+      message: "Invalid password",
+    };
+    return res.status(401).json(err);
+  }
+
+  // Generate token
+  const token = generateToken(user);
+  const { password: _password, __v, ...userWithoutPassword } = user.toObject();
+
+  res.json({
+    message: "User successfully logged in",
+    user: userWithoutPassword,
+    token,
+  });
+});
