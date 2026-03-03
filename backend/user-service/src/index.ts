@@ -1,12 +1,13 @@
 import express, { NextFunction, Request, Response } from "express";
 import path from "path";
-import dotenv from "dotenv";
 import morganMiddleware from "./middleware/morganMiddleware.js";
 import logger from "./utils/logger.js";
 import connectDb from "./config/db.js";
 import { createClient } from "redis";
 import TryCatch from "./utils/TryCatch.js";
 import userRouter from "./routes/user.js";
+import cors from "cors";
+import dotenv from "dotenv";
 dotenv.config();
 
 // Initialising express app
@@ -21,6 +22,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // Global middleware for logging HTTP requests via morgan
 app.use(morganMiddleware);
+
+// Allowing cors
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  }),
+);
 
 // Connect to database
 connectDb();

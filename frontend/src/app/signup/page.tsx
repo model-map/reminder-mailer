@@ -11,8 +11,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { IServerResponseError } from "@/types/error-type";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
+import axios, { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const SignUpForm = () => {
   // Form details
@@ -24,14 +27,46 @@ const SignUpForm = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<{ error: string; message: string }[]>([]);
+  const [error, setError] = useState<IServerResponseError[]>([]);
 
   // submit form
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError((prev) => [
-      { error: "Whatever", message: "This is a test error message" },
-    ]);
+    setError([]); // To empty error message before each submit
+    setLoading(true);
+    try {
+      const url = `${process.env.NEXT_PUBLIC_USER_SERVICE}/api/v1/user/signup`;
+      const { data } = await axios.post(url, {
+        username,
+        email,
+
+        password,
+      });
+      toast.success(data.message);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        const status = error.response?.status.toString() || "500";
+        const message =
+          error.response?.data?.message || error.message || "Unknown error";
+        setError([{ error: status, message }]);
+      } else if (error instanceof Error) {
+        setError([
+          {
+            error: error.name,
+            message: error.message,
+          },
+        ]);
+      } else {
+        setError([
+          {
+            error: "unknown_error",
+            message: "Unknown error. Please try again later",
+          },
+        ]);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -95,18 +130,19 @@ const SignUpForm = () => {
           </Button>
         </CardFooter>
       </Card>
-      {error?.length > 0 && (
-        <div
-          role="alert"
-          className="mb-4 rounded-md text-destructive px-4 py-3 text-sm"
-        >
+
+      <div
+        role="alert"
+        className="mb-4 rounded-md text-destructive px-4 py-3 text-sm"
+      >
+        {error?.length > 0 && (
           <ul className="list-disc pl-5 space-y-1">
             {error.map((e, i) => (
               <li key={i}>{e.message}</li>
             ))}
           </ul>
-        </div>
-      )}
+        )}
+      </div>
     </form>
   );
 };
