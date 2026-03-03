@@ -9,6 +9,7 @@ import TryCatch from "./utils/TryCatch.js";
 import userRouter from "./routes/user.js";
 dotenv.config();
 
+// Initialising express app
 const app = express();
 
 // Global middleware for serving static files

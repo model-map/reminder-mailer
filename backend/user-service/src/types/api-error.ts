@@ -1,6 +1,6 @@
 type ApiErrorCode =
   | "invalid_credentials"
-  | "email_required"
+  | "credentials_required"
   | "password_required"
   | "unauthorized"
   | "forbidden";
