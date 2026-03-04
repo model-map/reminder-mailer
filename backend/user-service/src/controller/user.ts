@@ -3,6 +3,7 @@ import validator from "validator";
 import { ApiError } from "../types/api-error.js";
 import { IUserDocument, User } from "../model/User.js";
 import {
+  decodeVerificationToken,
   generateLoginToken,
   generateVerificationToken,
 } from "../utils/jwtUtils.js";
@@ -132,7 +133,61 @@ export const signUp = TryCatch(async (req: Request, res: Response) => {
 });
 
 // -----------------------------------------------------------
-// CONTROLLER FOR USER VERIFICATION
+// CONTROLLER FOR VERIFYING USER
+export const verifyUser = TryCatch(async (req: Request, res: Response) => {
+  const token = req.params.token as string;
+  // if no token is provided
+  if (!token) {
+    const err: ApiError = {
+      error: "unauthenticated",
+      message: "No verification token provided",
+    };
+    return res.status(400).json(err);
+  }
+
+  // Check if verification token is valid
+  // If valid - decode it, get userId, and set `verified` property to true
+  const decodedToken = decodeVerificationToken(token);
+  // If verification token fails to verify
+  if (!decodedToken) {
+    const err: ApiError = {
+      error: "unauthenticated",
+      message: "Invalid or expired verification token",
+    };
+    return res.status(400).json(err);
+  }
+
+  const userId = decodedToken.userId;
+  if (!userId) {
+    const err: ApiError = {
+      error: "unauthenticated",
+      message: "Invalid or expired verification token",
+    };
+    return res.status(401).json(err);
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    const err: ApiError = {
+      error: "unauthenticated",
+      message: "Invalid or expired verification token",
+    };
+    return res.status(401).json(err);
+  }
+
+  user.verified = true;
+  await user.save();
+
+  const { password, __v, ...userWithoutPassword } = user.toObject();
+
+  return res.json({
+    message: `User successfully verified. Please Login`,
+    user: userWithoutPassword,
+  });
+});
+
+// -----------------------------------------------------------
+// CONTROLLER FOR LOGGING USER
 export const login = TryCatch(async (req: Request, res: Response) => {
   const loginIdentifier =
     req.body?.loginIdentifier?.trim()?.toLowerCase() || "";
