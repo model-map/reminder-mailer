@@ -7,6 +7,7 @@ import TryCatch from "./utils/TryCatch.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import mailRouter from "./routes/mail.js";
+import { startSendVerificationMailConsumer } from "./config/rabbitmq.js";
 dotenv.config();
 
 // Initialising express app
@@ -29,6 +30,9 @@ app.use(
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
   }),
 );
+
+// Start RabbitMQ verification mail consumer
+startSendVerificationMailConsumer();
 
 // Create a Redis client
 const redisClient = createClient({
