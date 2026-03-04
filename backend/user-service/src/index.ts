@@ -8,6 +8,7 @@ import TryCatch from "./utils/TryCatch.js";
 import userRouter from "./routes/user.js";
 import cors from "cors";
 import dotenv from "dotenv";
+import { connectRabbitMQ } from "./config/rabbitmq.js";
 dotenv.config();
 
 // Initialising express app
@@ -26,13 +27,16 @@ app.use(morganMiddleware);
 // Allowing cors
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: process.env.CLIENT_SERVICE,
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
   }),
 );
 
 // Connect to database
 connectDb();
+
+// Connect to RabbitMQ
+connectRabbitMQ();
 
 // Create a Redis client
 const redisClient = createClient({

@@ -1,11 +1,17 @@
 import { Request, Response } from "express";
 import validator from "validator";
 import { ApiError } from "../types/api-error.js";
-import { IUser, IUserDocument, User } from "../model/User.js";
-import generateToken from "../utils/generateToken.js";
+import { IUserDocument, User } from "../model/User.js";
+import {
+  generateLoginToken,
+  generateVerificationToken,
+} from "../utils/jwtUtils.js";
 import { comparePassword, hashPassword } from "../utils/passwordUtils.js";
 import TryCatch from "../utils/TryCatch.js";
 import { AuthenticatedRequest } from "../middleware/isAuth.js";
+import { publishToQueue } from "../config/rabbitmq.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 // -----------------------------------------------------------
 // CONTROLLER FOR USER SIGN UP
@@ -99,13 +105,27 @@ export const signUp = TryCatch(async (req: Request, res: Response) => {
   const user = await User.create({ username, email, password: hashedPassword });
 
   // Generate token
-  const token = generateToken(user._id.toString());
+  const token = generateVerificationToken(user._id.toString());
 
   //   Remove unnecessary info from user
   const { password: _password, __v, ...userWithoutPassword } = user.toObject();
 
+  //   Sending token to RabbitMQ's `send-verification-mail` queue
+  const msg = {
+    to: email,
+    subject: `${process.env.APPLICATION_NAME} Verification Mail`,
+    body: `
+    Please verify your ${process.env.APPLICATION_NAME} account.
+    Click the link below:
+    ${process.env.CLIENT_SERVICE}/api/v1/verify/${token}.
+
+    This link is only valid for 24 hours.
+            `,
+  };
+  await publishToQueue("send-verification-mail", msg);
+
   return res.status(201).json({
-    message: "User successfully signed up",
+    message: "Please check your mail for verification mail",
     user: userWithoutPassword,
     token,
   });
@@ -155,7 +175,7 @@ export const login = TryCatch(async (req: Request, res: Response) => {
   }
 
   // Generate token
-  const token = generateToken(user._id.toString());
+  const token = generateLoginToken(user._id.toString());
   const { password: _password, __v, ...userWithoutPassword } = user.toObject();
 
   res.json({
