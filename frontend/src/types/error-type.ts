@@ -1,4 +1,5 @@
 export interface IServerResponseError {
-  error: string;
+  code: string;
+  status?: string;
   message: string;
 }

@@ -16,6 +16,8 @@ import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const SignUpForm = () => {
   // Form details
@@ -28,6 +30,7 @@ const SignUpForm = () => {
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<IServerResponseError[]>([]);
+  const router = useRouter();
 
   // submit form
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -42,24 +45,27 @@ const SignUpForm = () => {
 
         password,
       });
-      toast.success(data.message);
+      router.replace(`/verify/?email=${email}`);
     } catch (error) {
       if (error instanceof AxiosError) {
+        const code = error.response?.data?.error?.code || "unknown_error";
         const status = error.response?.status.toString() || "500";
         const message =
-          error.response?.data?.message || error.message || "Unknown error";
-        setError([{ error: status, message }]);
+          error.response?.data?.error?.message ||
+          error.message ||
+          "Unknown error";
+        setError([{ code, status, message }]);
       } else if (error instanceof Error) {
         setError([
           {
-            error: error.name,
+            code: error.name,
             message: error.message,
           },
         ]);
       } else {
         setError([
           {
-            error: "unknown_error",
+            code: "unknown_error",
             message: "Unknown error. Please try again later",
           },
         ]);
@@ -71,13 +77,16 @@ const SignUpForm = () => {
 
   return (
     <form className="w-full max-w-md" onSubmit={handleSubmit}>
-      <Card className="bg-card text-card-foreground border rounded-xl shadow-sm p-8 space-y-6">
+      <Card className="text-card-foreground bg-card rounded-xl p-8 shadow-md space-y-6">
         <CardHeader>
           <CardTitle className="text-xl mx-auto pb-2">
             {formDetails.title}
           </CardTitle>
           <CardDescription className="mx-auto">
-            {formDetails.description}
+            Already have an account?{" "}
+            <span className="underline">
+              <Link href="/login">Login</Link>
+            </span>
           </CardDescription>
         </CardHeader>
 
@@ -116,6 +125,18 @@ const SignUpForm = () => {
                 required
               />
             </div>
+            {error?.length > 0 && (
+              <div
+                role="alert"
+                className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              >
+                <ul className="list-disc pl-5 space-y-1">
+                  {error.map((e, i) => (
+                    <li key={i}>{e.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </CardContent>
 
@@ -130,19 +151,6 @@ const SignUpForm = () => {
           </Button>
         </CardFooter>
       </Card>
-
-      <div
-        role="alert"
-        className="mb-4 rounded-md text-destructive px-4 py-3 text-sm"
-      >
-        {error?.length > 0 && (
-          <ul className="list-disc pl-5 space-y-1">
-            {error.map((e, i) => (
-              <li key={i}>{e.message}</li>
-            ))}
-          </ul>
-        )}
-      </div>
     </form>
   );
 };

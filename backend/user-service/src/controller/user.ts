@@ -124,9 +124,7 @@ export const signUp = TryCatch(async (req: Request, res: Response) => {
   await publishToQueue("send-verification-mail", msg);
 
   return res.status(201).json({
-    message: "Please check your mail for verification mail",
-    user: userWithoutPassword,
-    token,
+    message: `Account created successfully. Please check your email to verify your account.`,
   });
 });
 
@@ -274,32 +272,34 @@ export const resendVerificationMail = TryCatch(
 // -----------------------------------------------------------
 // CONTROLLER FOR LOGGING USER
 export const login = TryCatch(async (req: Request, res: Response) => {
-  const loginIdentifier =
-    req.body?.loginIdentifier?.trim()?.toLowerCase() || "";
+  const email = req.body?.email?.trim()?.toLowerCase() || "";
   const password = req.body?.password?.trim() || "";
 
-  // if no username or email is provided
-  if (!loginIdentifier || !password) {
+  // if no email is provided
+  if (!email || !password) {
     const err: ApiError = {
       code: "credentials_required",
-      message: `Username or Email and Password required`,
+      message: `Username and Password required`,
     };
     return res.status(401).json({ error: err });
   }
 
-  const isEmail = validator.isEmail(loginIdentifier);
-  let user: IUserDocument | null;
-  if (isEmail) {
-    user = await User.findOne({ email: loginIdentifier });
-  } else {
-    user = await User.findOne({ username: loginIdentifier });
+  // if email is not a valid email
+  if (!validator.isEmail(email)) {
+    const err: ApiError = {
+      code: "invalid_credentials",
+      message: "Invalid email or password",
+    };
+    return res.status(400).json({ error: err });
   }
+
+  let user = await User.findOne({ email: email });
 
   //   if user does not exist in DB
   if (!user) {
     const err: ApiError = {
       code: "invalid_credentials",
-      message: "User does not exist. Please create an account",
+      message: "Invalid email or password",
     };
     return res.status(401).json({ error: err });
   }
@@ -309,7 +309,7 @@ export const login = TryCatch(async (req: Request, res: Response) => {
   if (!isMatch) {
     const err: ApiError = {
       code: "invalid_credentials",
-      message: "Invalid password",
+      message: "Invalid email or password",
     };
     return res.status(401).json({ error: err });
   }
