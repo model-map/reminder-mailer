@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from "express";
-import TryCatch from "../utils/TryCatch.js";
 import { IUser, User } from "../model/User.js";
 import { ApiError } from "../types/api-error.js";
 import jwt, { JwtPayload } from "jsonwebtoken";
@@ -24,10 +23,10 @@ const isAuth = async (
 
     if (!authheader || !authheader.startsWith(`Bearer `)) {
       const err: ApiError = {
-        error: "unauthenticated",
+        code: "unauthenticated",
         message: `Please login`,
       };
-      return res.status(401).json(err);
+      return res.status(401).json({ error: err });
     }
 
     const token = authheader.split(" ")[1];
@@ -43,10 +42,10 @@ const isAuth = async (
     const user = await User.findById(userId);
     if (!user) {
       const err: ApiError = {
-        error: "unauthenticated",
+        code: "unauthenticated",
         message: "Invalid or expired JWT token",
       };
-      return res.status(401).json(err);
+      return res.status(401).json({ error: err });
     }
     const {
       password: _password,
@@ -63,25 +62,25 @@ const isAuth = async (
       error instanceof JsonWebTokenError
     ) {
       const err: ApiError = {
-        error: "unauthenticated",
+        code: "unauthenticated",
         message: "Invalid or expired token",
       };
       logger.error(err);
-      return res.status(401).json(err);
+      return res.status(401).json({ error: err });
     } else if (error instanceof Error) {
       const err: ApiError = {
-        error: "internal_server_error",
+        code: "internal_server_error",
         message: `Unexpected error: ${error.message}`,
       };
       logger.error(err);
-      return res.status(500).json(err);
+      return res.status(500).json({ error: err });
     } else {
       const err: ApiError = {
-        error: "internal_server_error",
+        code: "internal_server_error",
         message: `Unexpected error: Unknown error`,
       };
       logger.error(err);
-      return res.status(500).json(err);
+      return res.status(500).json({ error: err });
     }
   }
 };

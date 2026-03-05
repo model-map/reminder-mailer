@@ -4,9 +4,10 @@ type ApiErrorCode =
   | "password_required"
   | "unauthorized"
   | "unauthenticated"
-  | "internal_server_error";
+  | "internal_server_error"
+  | "rate_limit_exceeded";
 
 export interface ApiError {
-  error: ApiErrorCode;
+  code: ApiErrorCode;
   message: string;
 }

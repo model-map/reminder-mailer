@@ -27,8 +27,12 @@ export const decodeVerificationToken = (token: string) => {
       `Error verifying JWT Token - JWT_SECRET_VERIFICATION_MAIL is not defined`,
     );
   }
-  const decodedToken = jwt.verify(token, JWT_SECRET) as IJwtPayload;
-  return decodedToken;
+
+  try {
+    return jwt.verify(token, JWT_SECRET) as IJwtPayload;
+  } catch {
+    return null;
+  }
 };
 
 // Generate 15d login token after verification
@@ -50,6 +54,9 @@ export const decodeLoginToken = (token: string) => {
   if (!JWT_SECRET) {
     throw new Error("Error verifying JWT token - JWT_SECRET is not defined");
   }
-  const decodedToken = jwt.verify(token, JWT_SECRET) as IJwtPayload;
-  return decodedToken;
+  try {
+    return jwt.verify(token, JWT_SECRET) as IJwtPayload;
+  } catch {
+    return null;
+  }
 };
