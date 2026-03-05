@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/context/theme-provider";
 import { Toaster } from "sonner";
 import Header from "@/components/header";
+import { AuthProvider } from "@/context/authContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -74,8 +75,10 @@ export default function RootLayout({
         >
           <Toaster position="top-center" />
           <div className="min-h-screen w-full flex flex-col">
-            <Header />
-            <main className="flex flex-col flex-1">{children}</main>
+            <AuthProvider>
+              <Header />
+              <main className="flex flex-col flex-1">{children}</main>
+            </AuthProvider>
           </div>
         </ThemeProvider>
       </body>
