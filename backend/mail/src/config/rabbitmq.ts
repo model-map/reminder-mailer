@@ -26,7 +26,9 @@ export const startSendVerificationMailConsumer = async () => {
     channel.consume(queueName, async (msg) => {
       if (msg) {
         try {
-          const { to, subject, body } = JSON.parse(msg.content.toString());
+          const { to, subject, text, html } = JSON.parse(
+            msg.content.toString(),
+          );
 
           const transporter: Transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
@@ -42,7 +44,8 @@ export const startSendVerificationMailConsumer = async () => {
             from: "Reminder Mailer",
             to,
             subject,
-            text: body,
+            text,
+            html,
           });
 
           logger.info(`Verification mail sent to ${to}`);

@@ -13,6 +13,7 @@ import { AuthenticatedRequest } from "../middleware/isAuth.js";
 import { publishToQueue } from "../config/rabbitmq.js";
 import dotenv from "dotenv";
 import { redisClient } from "../config/redis.js";
+import { verificationMessage } from "../utils/mailUtils.js";
 dotenv.config();
 
 // -----------------------------------------------------------
@@ -119,17 +120,7 @@ export const signUp = TryCatch(async (req: Request, res: Response) => {
   const { password: _password, __v, ...userWithoutPassword } = user.toObject();
 
   //   Sending verification token to RabbitMQ's `send-verification-mail` queue
-  const msg = {
-    to: email,
-    subject: `${process.env.APPLICATION_NAME} Verification Mail`,
-    body: `
-    Please verify your ${process.env.APPLICATION_NAME} account.
-    Click the link below:
-    ${process.env.CLIENT_SERVICE}/api/v1/verify?token=${token}.
-
-    This link is only valid for 24 hours.
-            `,
-  };
+  const msg = verificationMessage(email, token);
   await publishToQueue("send-verification-mail", msg);
 
   return res.status(201).json({
@@ -254,17 +245,7 @@ export const resendVerificationMail = TryCatch(
     });
 
     //   Sending verification token to RabbitMQ's `send-verification-mail` queue
-    const msg = {
-      to: email,
-      subject: `${process.env.APPLICATION_NAME} Verification Mail`,
-      body: `
-    Please verify your ${process.env.APPLICATION_NAME} account.
-    Click the link below:
-    ${process.env.CLIENT_SERVICE}/api/v1/verify?token=${newVerificationToken}.
-
-    This link is only valid for 24 hours.
-            `,
-    };
+    const msg = verificationMessage(email, newVerificationToken);
     await publishToQueue("send-verification-mail", msg);
 
     // Set 60s rate limit
