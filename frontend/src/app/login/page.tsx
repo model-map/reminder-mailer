@@ -13,11 +13,15 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { IServerResponseError } from "@/types/error-type";
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
 import Link from "next/link";
 import Cookie from "js-cookie";
 import { toast } from "sonner";
+import "animate.css";
+import { useRouter } from "next/navigation";
+import { IAuthContext, useAuth } from "@/context/authContext";
+import { IUser } from "@/types/interfaces";
 
 const SignUpForm = () => {
   // Form details
@@ -29,6 +33,23 @@ const SignUpForm = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [error, setError] = useState<IServerResponseError[]>([]);
+  const {
+    isAuth,
+    loading: authLoading,
+    setUser,
+    setIsAuth,
+    setIsVerified,
+  } = useAuth() as Pick<
+    IAuthContext,
+    "isAuth" | "loading" | "setIsVerified" | "setIsAuth" | "setUser"
+  >;
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isAuth) {
+      router.replace("/");
+    }
+  }, [isAuth, router]);
 
   // submit form
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -42,10 +63,15 @@ const SignUpForm = () => {
         email,
         password,
       });
-      toast.success(data.message);
+      // toast.success(data.message);
+      const userData: IUser = data.data.user;
+      setUser(userData);
+      setIsAuth(true);
+      setIsVerified(userData.verified);
       Cookie.set("login_token", data.data.token, {
         expires: 7,
       });
+      router.replace("/");
     } catch (error) {
       if (error instanceof AxiosError) {
         const code = error.response?.data?.error?.code || "unknown_error";
@@ -75,10 +101,19 @@ const SignUpForm = () => {
     }
   };
 
+  if (authLoading || isAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
     <>
+      <h1 className="text-3xl font-semibold tracking-tight">Reminder Mailer</h1>
       <form className="w-full max-w-md" onSubmit={handleSubmit}>
-        <Card className="bg-card text-card-foreground border rounded-xl shadow-sm p-8 space-y-6">
+        <Card className="bg-card text-card-foreground border rounded-xl shadow-sm p-8 space-y-6 animate__animated animate__fadeIn">
           <CardHeader>
             <CardTitle className="text-xl mx-auto pb-2">
               {formDetails.title}

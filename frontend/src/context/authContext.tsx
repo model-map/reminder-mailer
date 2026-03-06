@@ -14,8 +14,12 @@ import { toast } from "sonner";
 
 export interface IAuthContext {
   user: IUser | null;
-  loading: boolean;
   setUser: Dispatch<SetStateAction<IUser | null>>;
+  isAuth: boolean;
+  setIsAuth: Dispatch<SetStateAction<boolean>>;
+  isVerified: boolean | null;
+  setIsVerified: Dispatch<SetStateAction<boolean | null>>;
+  loading: boolean;
 }
 
 interface IAuthProvider {
@@ -28,8 +32,9 @@ const AuthContext = createContext<IAuthContext | undefined>(undefined);
 // create provider
 export const AuthProvider: React.FC<IAuthProvider> = ({ children }) => {
   const [user, setUser] = useState<IUser | null>(null);
+  const [isAuth, setIsAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
   //   Fetchh users
 
   useEffect(() => {
@@ -43,7 +48,11 @@ export const AuthProvider: React.FC<IAuthProvider> = ({ children }) => {
             Authorization: `Bearer ${token}`,
           },
         });
-        setUser(data.data.user);
+        const userData: IUser = data.data.user;
+
+        setUser(userData);
+        setIsAuth(true);
+        setIsVerified(userData.verified);
       } catch (error) {
         if (error instanceof AxiosError) {
           const message =
@@ -64,7 +73,17 @@ export const AuthProvider: React.FC<IAuthProvider> = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        loading,
+        isAuth,
+        setIsAuth,
+        isVerified,
+        setIsVerified,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

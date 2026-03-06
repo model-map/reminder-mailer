@@ -15,9 +15,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Reminder Mailer
-          </h1>
           {/* <p className="text-sm text-muted-foreground">Create your account</p> */}
         </div>
 
