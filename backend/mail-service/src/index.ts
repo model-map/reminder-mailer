@@ -8,6 +8,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mailRouter from "./routes/mail.js";
 import { startSendVerificationMailConsumer } from "./config/rabbitmq.js";
+import { connectRedis, redisClient } from "./config/redis.js";
 dotenv.config();
 
 // Initialising express app
@@ -34,29 +35,10 @@ app.use(
 // Start RabbitMQ verification mail consumer
 startSendVerificationMailConsumer();
 
-// Create a Redis client
-const redisClient = createClient({
-  username: process.env.REDIS_USERNAME,
-  password: process.env.REDIS_PASSWORD,
-  socket: {
-    keepAlive: true,
-    host: process.env.REDIS_URL,
-    port: parseInt(process.env.REDIS_PORT!),
-    reconnectStrategy(retries, cause) {
-      if (retries > 10) return new Error("Retry limit reached.");
-      return Math.min(retries * 100, 3000);
-    },
-  },
-});
-
-redisClient.on("error", (err: any) => {
-  console.log("Redis Client Error", err);
-  logger.error(err);
-});
-await redisClient.connect().then(() => logger.info(`Connected to Redis.`));
+// Connect redis
+connectRedis();
 
 // '/' endpoint
-
 const project = process.env.PROJECT || "unknown-project";
 const service = process.env.SERVICE || "unknown-service";
 app.get(
