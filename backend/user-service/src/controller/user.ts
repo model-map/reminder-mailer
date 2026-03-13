@@ -172,7 +172,8 @@ export const verifyUser = TryCatch(async (req: Request, res: Response) => {
   if (!user) {
     const err: ApiError = {
       code: "unauthenticated",
-      message: "Invalid or expired verification token",
+      message:
+        "Verification link invalid or expired. Please request a new verification email.",
     };
     return res.status(401).json({ error: err });
   }
@@ -186,7 +187,7 @@ export const verifyUser = TryCatch(async (req: Request, res: Response) => {
   const { password, __v, ...userWithoutPassword } = user.toObject();
 
   return res.json({
-    message: `User successfully verified. Please Login`,
+    message: `User successfully verified`,
     data: {
       user: userWithoutPassword,
     },

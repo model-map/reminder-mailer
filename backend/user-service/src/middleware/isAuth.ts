@@ -43,7 +43,7 @@ const isAuth = async (
     if (!user) {
       const err: ApiError = {
         code: "unauthenticated",
-        message: "Invalid or expired JWT token",
+        message: "Invalid or expired JWT token. Please Login",
       };
       return res.status(401).json({ error: err });
     }
