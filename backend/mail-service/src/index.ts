@@ -27,7 +27,7 @@ app.use(morganMiddleware);
 // Allowing cors
 app.use(
   cors({
-    origin: process.env.USER_SERVICE,
+    origin: process.env.CLIENT_URL,
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
   }),
 );
