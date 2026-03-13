@@ -1,5 +1,6 @@
 "use client";
 
+import LandingPage from "@/components/landing-page";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/authContext";
 import log from "loglevel";
@@ -19,7 +20,11 @@ export default function Home() {
   }
 
   if (!user) {
-    return <div>User unauthenticated</div>;
+    return (
+      <div>
+        <LandingPage />
+      </div>
+    );
   }
 
   return <div>User authenticated</div>;

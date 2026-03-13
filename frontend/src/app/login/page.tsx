@@ -122,7 +122,7 @@ const SignUpForm = () => {
             <CardDescription className="mx-auto">
               Don&apos;t have an account?{" "}
               <span className="underline">
-                <Link href="/signup">Sign up</Link>
+                <Link href="/register">Register</Link>
               </span>
             </CardDescription>
           </CardHeader>
