@@ -96,7 +96,7 @@ const SignUpForm = () => {
   }
 
   return (
-    <>
+    <div className="flex flex-col items-center justify-center gap-8">
       <h1 className="text-3xl font-semibold tracking-tight">Reminder Mailer</h1>
       <form className="w-full max-w-md" onSubmit={handleSubmit}>
         <Card className="text-card-foreground bg-card rounded-xl p-8 shadow-md space-y-6 animate__animated animate__fadeIn">
@@ -174,7 +174,7 @@ const SignUpForm = () => {
           </CardFooter>
         </Card>
       </form>
-    </>
+    </div>
   );
 };
 export default SignUpForm;

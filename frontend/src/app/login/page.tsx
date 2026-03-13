@@ -63,7 +63,7 @@ const SignUpForm = () => {
         email,
         password,
       });
-      // toast.success(data.message);
+
       const userData: IUser = data.data.user;
       setUser(userData);
       setIsAuth(true);
@@ -76,6 +76,7 @@ const SignUpForm = () => {
       if (error instanceof AxiosError) {
         const code = error.response?.data?.error?.code || "unknown_error";
         const status = error.response?.status.toString() || "500";
+
         const message =
           error.response?.data?.error?.message ||
           error.message ||
@@ -110,7 +111,7 @@ const SignUpForm = () => {
   }
 
   return (
-    <>
+    <div className="flex flex-col items-center justify-center gap-8">
       <h1 className="text-3xl font-semibold tracking-tight">Reminder Mailer</h1>
       <form className="w-full max-w-md" onSubmit={handleSubmit}>
         <Card className="bg-card text-card-foreground border rounded-xl shadow-sm p-8 space-y-6 animate__animated animate__fadeIn">
@@ -187,7 +188,7 @@ const SignUpForm = () => {
           </CardFooter>
         </Card>
       </form>
-    </>
+    </div>
   );
 };
 export default SignUpForm;

@@ -12,7 +12,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Spinner />
       </div>
     );
