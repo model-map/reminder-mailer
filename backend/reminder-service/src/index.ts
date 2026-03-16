@@ -6,6 +6,7 @@ import morganMiddleware from "./middleware/morganMiddleware.js";
 import connectDb from "./config/db.js";
 dotenv.config();
 import reminderRouter from "./routes/reminder.js";
+import { connectRabbitMQ } from "./config/rabbitmq.js";
 
 const app = express();
 
@@ -21,6 +22,9 @@ app.use(morganMiddleware);
 
 // Connect to database
 connectDb();
+
+// Connect RabbitMQ
+connectRabbitMQ();
 
 app.get("/", (req, res) => res.json({ message: "Hello world" }));
 

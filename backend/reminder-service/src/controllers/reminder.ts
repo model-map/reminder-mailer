@@ -8,6 +8,7 @@ import axios from "axios";
 import { IReminder, Reminders } from "../models/reminder.js";
 import { statuses } from "../types/reminder.types.js";
 import { isFutureDate } from "../validators/reminder.validator.js";
+import { publishToQueue } from "../config/rabbitmq.js";
 
 // CONTROLLER FOR CREATING A REMINDER
 export const createReminder = TryCatch(
@@ -95,6 +96,15 @@ export const createReminder = TryCatch(
       status,
       remindAt,
     });
+
+    // Send a confirmation mail that email will be delivered in the future
+    const msg = {
+      to: user.email,
+      subject: `Reminder Scheduled - ${title}`,
+      text: `Reminder Scheduled - ${title}. You will be reminded at ${new Date(remindAt).toLocaleString()}`,
+    };
+
+    await publishToQueue("send-mail", msg);
 
     res.json({ data: { reminder }, message: `Successfully created reminder` });
   },
