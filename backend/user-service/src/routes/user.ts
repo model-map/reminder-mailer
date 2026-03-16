@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getCurrentUser,
   getUser,
   login,
   resendVerificationMail,
@@ -14,6 +15,7 @@ router.post("/signup", signUp);
 router.post("/login", login);
 router.post("/verify/resendMail", resendVerificationMail);
 router.get("/verify", verifyUser);
-router.get("/me", isAuth, getUser);
+router.get("/me", isAuth, getCurrentUser);
+router.get("/get/:userId", getUser);
 
 export default router;

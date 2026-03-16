@@ -5,7 +5,8 @@ type ApiErrorCode =
   | "unauthorized"
   | "unauthenticated"
   | "internal_server_error"
-  | "rate_limit_exceeded";
+  | "rate_limit_exceeded"
+  | "resource_not_found";
 
 export interface ApiError {
   code: ApiErrorCode;

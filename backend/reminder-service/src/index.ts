@@ -5,6 +5,7 @@ import logger from "./utils/logger.js";
 import morganMiddleware from "./middleware/morganMiddleware.js";
 import connectDb from "./config/db.js";
 dotenv.config();
+import reminderRouter from "./routes/reminder.js";
 
 const app = express();
 
@@ -22,6 +23,9 @@ app.use(morganMiddleware);
 connectDb();
 
 app.get("/", (req, res) => res.json({ message: "Hello world" }));
+
+// Routers
+app.use("/api/v1/reminders", reminderRouter);
 
 // 404 handler
 app.use((req: Request, res: Response, next: NextFunction) => {

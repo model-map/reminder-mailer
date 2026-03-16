@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import validator from "validator";
 import { ApiError } from "../types/api-error.js";
 import { IUserDocument, User } from "../model/User.js";
@@ -14,6 +14,8 @@ import { publishToQueue } from "../config/rabbitmq.js";
 import dotenv from "dotenv";
 import { redisClient } from "../config/redis.js";
 import { verificationMessage } from "../utils/mailUtils.js";
+import logger from "../utils/logger.js";
+import mongoose from "mongoose";
 dotenv.config();
 
 // -----------------------------------------------------------
@@ -329,8 +331,8 @@ export const login = TryCatch(async (req: Request, res: Response) => {
 });
 
 // -----------------------------------------------------------
-// CONTROLLER TO FETCH USER
-export const getUser = TryCatch(
+// CONTROLLER TO FETCH CURRENT USER
+export const getCurrentUser = TryCatch(
   async (req: AuthenticatedRequest, res: Response) => {
     const user = req.user;
     // If no user
@@ -343,5 +345,44 @@ export const getUser = TryCatch(
     }
 
     return res.json({ data: { user }, message: "user fetched successfully" });
+  },
+);
+
+// -----------------------------------------------------------
+// CONTROLLER TO FETCH USER
+export const getUser = TryCatch(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const raw = req.params.userId;
+    const userId =
+      typeof raw === "string"
+        ? raw.trim()
+        : Array.isArray(raw)
+          ? raw[0].trim()
+          : "";
+
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      const err: ApiError = {
+        code: "unauthorized",
+        message: "Invalid or missing userId.",
+      };
+      return res.status(400).json({ error: err });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      const err: ApiError = {
+        code: "resource_not_found",
+        message: `Failed to get user - no user found`,
+      };
+      return res.status(400).json({ error: err });
+    }
+
+    const { password, __v, ...userWithoutPassword } = user.toObject();
+
+    return res.json({
+      data: { user: userWithoutPassword },
+      message: "Successfully fetched user",
+    });
   },
 );
